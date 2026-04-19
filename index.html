@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NicoKlas | Trappen van Vergelijking 2.4</title>
+    <title>NicoKlas | Trappen van Vergelijking 2.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Verdana&display=swap" rel="stylesheet">
     <style>
@@ -28,17 +28,21 @@
             border-collapse: collapse;
         }
 
+        /* Afwisselende achtergrondkleur voor rijen */
+        #exercise-body tr:nth-child(even) {
+            background-color: #f3f4f6; /* Lichtgrijs */
+        }
+
         td {
             text-align: center;
-            padding: 0 10px;
+            padding: 4px 10px; /* Iets meer padding voor de kleurvlakken */
             vertical-align: bottom;
             word-wrap: break-word;
         }
 
-        /* De schrijflijn: strak begrensd binnen de celbreedte */
         .schrijflijn {
             display: inline-block;
-            width: 90%;
+            width: 85%;
             border-bottom: 1px solid black;
             min-height: 1.2em;
         }
@@ -53,6 +57,12 @@
                 margin: 0 !important; 
                 width: 100% !important;
                 min-height: 29.7cm;
+            }
+            /* Zorg dat kleuren geprint worden */
+            #exercise-body tr:nth-child(even) {
+                background-color: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
             .page-break { page-break-before: always; }
         }
@@ -86,15 +96,15 @@
                 <label class="text-xs font-bold uppercase text-black mb-2 block">Trappen verbergen:</label>
                 <div class="space-y-2 text-[10px] font-bold uppercase">
                     <label class="flex items-center gap-2"><input type="checkbox" id="hide-s1" class="accent-black"> Stellende trap</label>
-                    <label class="flex items-center gap-2"><input type="checkbox" id="hide-s2" checked class="accent-black"> Vergrotende trap</label>
-                    <label class="flex items-center gap-2"><input type="checkbox" id="hide-s3" checked class="accent-black"> Overtreffende trap</label>
-                    <label class="flex items-center gap-2 text-blue-800"><input type="checkbox" id="mode-mix" class="accent-black"> Mix modus (willekeurig)</label>
+                    <label class="flex items-center gap-2"><input type="checkbox" id="hide-s2" checked class="accent-black"> Vergrotend</label>
+                    <label class="flex items-center gap-2"><input type="checkbox" id="hide-s3" checked class="accent-black"> Overtreffend</label>
+                    <label class="flex items-center gap-2 text-blue-800"><input type="checkbox" id="mode-mix" class="accent-black"> Mix modus</label>
                 </div>
             </div>
 
             <div class="mb-6">
                 <label class="flex items-center gap-2 text-[10px] font-bold uppercase">
-                    <input type="checkbox" id="show-key" checked class="accent-black"> Toon Verbetersleutel
+                    <input type="checkbox" id="show-key" checked class="accent-black"> Verbetersleutel
                 </label>
             </div>
 
@@ -144,7 +154,6 @@
             {s1: 'hard', s2: 'harder', s3: 'hardst'}, {s1: 'sterk', s2: 'sterker', s3: 'sterkst'}
         ];
 
-        // Beperk slider tot max lengte van database
         const sliderAantal = document.getElementById('input-aantal');
         sliderAantal.max = woorden.length;
 
@@ -163,7 +172,7 @@
 
         function generate() {
             let aantal = parseInt(sliderAantal.value);
-            aantal = Math.min(aantal, woorden.length); // Veiligheid
+            aantal = Math.min(aantal, woorden.length);
             document.getElementById('val-aantal').innerText = aantal;
 
             const hideS1 = document.getElementById('hide-s1').checked;
@@ -184,9 +193,8 @@
                 let s1Out, s2Out, s3Out;
 
                 if (mixMode) {
-                    // Willekeurig 1 of 2 trappen verbergen
                     const indices = [1, 2, 3].sort(() => 0.5 - Math.random());
-                    const aantalTeVerbergen = Math.floor(Math.random() * 2) + 1; // 1 of 2
+                    const aantalTeVerbergen = Math.floor(Math.random() * 2) + 1;
                     const teVerbergen = indices.slice(0, aantalTeVerbergen);
                     
                     s1Out = teVerbergen.includes(1) ? '<span class="schrijflijn"></span>' : w.s1;
