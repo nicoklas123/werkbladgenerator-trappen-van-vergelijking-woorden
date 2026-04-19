@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NicoKlas | Trappen van Vergelijking 2.4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Verdana&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gevel-licht-greige: #e5e2db;
+            --gevel-donker-greige: #d1cdc3;
+        }
+
+        body {
+            background-color: var(--gevel-licht-greige);
+            font-family: 'Verdana', sans-serif;
+        }
+
+        .aside-panel {
+            background-color: var(--gevel-donker-greige);
+            border: 1px solid black;
+        }
+
+        table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        td {
+            text-align: center;
+            padding: 0 10px;
+            vertical-align: bottom;
+            word-wrap: break-word;
+        }
+
+        /* De schrijflijn: strak begrensd binnen de celbreedte */
+        .schrijflijn {
+            display: inline-block;
+            width: 90%;
+            border-bottom: 1px solid black;
+            min-height: 1.2em;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white !important; padding: 0 !important; }
+            .max-w-7xl { max-width: 100% !important; margin: 0 !important; }
+            .A4 { 
+                box-shadow: none !important; 
+                padding: 1cm !important; 
+                margin: 0 !important; 
+                width: 100% !important;
+                min-height: 29.7cm;
+            }
+            .page-break { page-break-before: always; }
+        }
+
+        input[type=range] { accent-color: #000; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+        
+        <aside class="aside-panel p-6 h-fit no-print">
+            <h2 class="text-[10px] font-bold uppercase tracking-widest text-black/50 mb-4">Instellingen</h2>
+            
+            <div class="mb-6">
+                <label class="text-xs font-bold uppercase text-black mb-2 block">Aantal: <span id="val-aantal">15</span></label>
+                <input type="range" id="input-aantal" min="1" max="50" value="15" class="w-full">
+            </div>
+
+            <div class="mb-6">
+                <label class="text-xs font-bold uppercase text-black mb-2 block">Lettergrootte: <span id="val-font">14</span>px</label>
+                <input type="range" id="input-font" min="10" max="30" value="14" class="w-full">
+            </div>
+
+            <div class="mb-6">
+                <label class="text-xs font-bold uppercase text-black mb-2 block">Regelafstand: <span id="val-leading">2.5</span></label>
+                <input type="range" id="input-leading" min="1" max="6" step="0.1" value="2.5" class="w-full">
+            </div>
+
+            <div class="mb-6 border-t border-black/10 pt-4">
+                <label class="text-xs font-bold uppercase text-black mb-2 block">Trappen verbergen:</label>
+                <div class="space-y-2 text-[10px] font-bold uppercase">
+                    <label class="flex items-center gap-2"><input type="checkbox" id="hide-s1" class="accent-black"> Stellende trap</label>
+                    <label class="flex items-center gap-2"><input type="checkbox" id="hide-s2" checked class="accent-black"> Vergrotende trap</label>
+                    <label class="flex items-center gap-2"><input type="checkbox" id="hide-s3" checked class="accent-black"> Overtreffende trap</label>
+                    <label class="flex items-center gap-2 text-blue-800"><input type="checkbox" id="mode-mix" class="accent-black"> Mix modus (willekeurig)</label>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="flex items-center gap-2 text-[10px] font-bold uppercase">
+                    <input type="checkbox" id="show-key" checked class="accent-black"> Toon Verbetersleutel
+                </label>
+            </div>
+
+            <button onclick="generate()" class="w-full bg-black text-white text-xs font-bold uppercase tracking-widest py-4 mb-2 hover:opacity-90">Nieuwe Woorden</button>
+            <button onclick="window.print()" class="w-full bg-white border border-black text-black text-xs font-bold uppercase tracking-widest py-4 hover:bg-gray-100">Print</button>
+        </aside>
+
+        <main class="md:col-span-3 space-y-8">
+            <div class="bg-white shadow-lg p-12 A4" id="oefenblad">
+                <header class="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
+                    <h1 class="text-3xl font-black uppercase tracking-tighter">Trappen van vergelijking</h1>
+                    <div class="text-[10px] font-bold text-gray-400 uppercase">Naam: ............................................</div>
+                </header>
+
+                <table id="exercise-table">
+                    <tbody id="exercise-body"></tbody>
+                </table>
+
+                <footer class="flex justify-end mt-12 border-t border-gray-100 pt-4">
+                    <div class="text-[9px] text-gray-300 font-bold uppercase">CC BY-NC-SA 4.0 NicoKlas</div>
+                </footer>
+            </div>
+
+            <div class="bg-white shadow-lg p-12 A4 page-break hidden" id="sleutelblad">
+                <h2 class="text-2xl font-black uppercase tracking-tighter border-b-2 border-black pb-2 mb-6">Verbetersleutel</h2>
+                <div id="answer-list" class="grid grid-cols-2 gap-x-8 gap-y-2 text-[11px]"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const woorden = [
+            {s1: 'jong', s2: 'jonger', s3: 'jongst'}, {s1: 'vies', s2: 'viezer', s3: 'viest'},
+            {s1: 'dun', s2: 'dunner', s3: 'dunst'}, {s1: 'zout', s2: 'zouter', s3: 'zoutst'},
+            {s1: 'koud', s2: 'kouder', s3: 'koudst'}, {s1: 'groot', s2: 'groter', s3: 'grootst'},
+            {s1: 'rijk', s2: 'rijker', s3: 'rijkst'}, {s1: 'druk', s2: 'drukker', s3: 'drukst'},
+            {s1: 'luid', s2: 'luider', s3: 'luidst'}, {s1: 'slim', s2: 'slimmer', s3: 'slimst'},
+            {s1: 'laag', s2: 'lager', s3: 'laagst'}, {s1: 'eerlijk', s2: 'eerlijker', s3: 'eerlijkst'},
+            {s1: 'vuil', s2: 'vuiler', s3: 'vuilst'}, {s1: 'mooi', s2: 'mooier', s3: 'mooist'},
+            {s1: 'dom', s2: 'dommer', s3: 'domst'}, {s1: 'zoet', s2: 'zoeter', s3: 'zoetst'},
+            {s1: 'snel', s2: 'sneller', s3: 'snelst'}, {s1: 'klein', s2: 'kleiner', s3: 'kleinst'},
+            {s1: 'warm', s2: 'warmer', s3: 'warmst'}, {s1: 'ver', s2: 'verder', s3: 'verst'},
+            {s1: 'licht', s2: 'lichter', s3: 'lichtst'}, {s1: 'zwak', s2: 'zwakker', s3: 'zwakst'},
+            {s1: 'breed', s2: 'breder', s3: 'breedst'}, {s1: 'hoog', s2: 'hoger', s3: 'hoogst'},
+            {s1: 'stil', s2: 'stiller', s3: 'stilst'}, {s1: 'goed', s2: 'beter', s3: 'best'},
+            {s1: 'lang', s2: 'langer', s3: 'langst'}, {s1: 'zwaar', s2: 'zwaarder', s3: 'zwaarst'},
+            {s1: 'hard', s2: 'harder', s3: 'hardst'}, {s1: 'sterk', s2: 'sterker', s3: 'sterkst'}
+        ];
+
+        // Beperk slider tot max lengte van database
+        const sliderAantal = document.getElementById('input-aantal');
+        sliderAantal.max = woorden.length;
+
+        function updateStyles() {
+            const fontSize = document.getElementById('input-font').value;
+            const leading = document.getElementById('input-leading').value;
+            document.getElementById('val-font').innerText = fontSize;
+            document.getElementById('val-leading').innerText = leading;
+
+            const rijen = document.querySelectorAll('#exercise-body tr');
+            rijen.forEach(tr => {
+                tr.style.fontSize = fontSize + 'px';
+                tr.style.lineHeight = leading;
+            });
+        }
+
+        function generate() {
+            let aantal = parseInt(sliderAantal.value);
+            aantal = Math.min(aantal, woorden.length); // Veiligheid
+            document.getElementById('val-aantal').innerText = aantal;
+
+            const hideS1 = document.getElementById('hide-s1').checked;
+            const hideS2 = document.getElementById('hide-s2').checked;
+            const hideS3 = document.getElementById('hide-s3').checked;
+            const mixMode = document.getElementById('mode-mix').checked;
+            const showKey = document.getElementById('show-key').checked;
+
+            const tableBody = document.getElementById('exercise-body');
+            const answerList = document.getElementById('answer-list');
+            tableBody.innerHTML = '';
+            answerList.innerHTML = '';
+
+            const selectie = [...woorden].sort(() => 0.5 - Math.random()).slice(0, aantal);
+
+            selectie.forEach((w, i) => {
+                const tr = document.createElement('tr');
+                let s1Out, s2Out, s3Out;
+
+                if (mixMode) {
+                    // Willekeurig 1 of 2 trappen verbergen
+                    const indices = [1, 2, 3].sort(() => 0.5 - Math.random());
+                    const aantalTeVerbergen = Math.floor(Math.random() * 2) + 1; // 1 of 2
+                    const teVerbergen = indices.slice(0, aantalTeVerbergen);
+                    
+                    s1Out = teVerbergen.includes(1) ? '<span class="schrijflijn"></span>' : w.s1;
+                    s2Out = teVerbergen.includes(2) ? '<span class="schrijflijn"></span>' : w.s2;
+                    s3Out = teVerbergen.includes(3) ? '<span class="schrijflijn"></span>' : w.s3;
+                } else {
+                    s1Out = hideS1 ? '<span class="schrijflijn"></span>' : w.s1;
+                    s2Out = hideS2 ? '<span class="schrijflijn"></span>' : w.s2;
+                    s3Out = hideS3 ? '<span class="schrijflijn"></span>' : w.s3;
+                }
+
+                tr.innerHTML = `<td>${s1Out}</td><td>${s2Out}</td><td>${s3Out}</td>`;
+                tableBody.appendChild(tr);
+
+                const item = document.createElement('div');
+                item.innerHTML = `<span class='text-gray-400 mr-1'>${i+1}.</span> ${w.s1} - ${w.s2} - ${w.s3}`;
+                answerList.appendChild(item);
+            });
+
+            document.getElementById('sleutelblad').classList.toggle('hidden', !showKey);
+            updateStyles();
+        }
+
+        document.getElementById('input-font').addEventListener('input', updateStyles);
+        document.getElementById('input-leading').addEventListener('input', updateStyles);
+        document.getElementById('input-aantal').addEventListener('input', generate);
+        document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', generate));
+
+        generate();
+    </script>
+</body>
+</html>
